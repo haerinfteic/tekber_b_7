@@ -1,0 +1,86 @@
+digraph ERD {
+  graph [rankdir=LR, splines=true, nodesep=0.7, ranksep=1.3, fontname="Helvetica", bgcolor="white", pad=0.4,
+         label="ERD FasorITS (Supabase / PostgreSQL)", labelloc=t, fontsize=22];
+  node  [shape=plain, fontname="Helvetica", fontsize=12];
+  edge  [fontname="Helvetica", fontsize=11, color="#334155", arrowsize=1.1];
+
+  users [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5">
+      <TR><TD BGCOLOR="#64748b" COLSPAN="2"><FONT COLOR="white"><B>auth.users</B> (bawaan Supabase)</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT">PK</TD><TD ALIGN="LEFT">id : uuid</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">email : text</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">raw_user_meta_data : jsonb</TD></TR>
+    </TABLE>>];
+
+  profiles [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5">
+      <TR><TD BGCOLOR="#0b57c4" COLSPAN="2"><FONT COLOR="white"><B>profiles</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT">PK, FK</TD><TD ALIGN="LEFT">id : uuid</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">full_name : text</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">nrp : text (unique)</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">email : text</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">user_type : mahasiswa | umum</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">created_at : timestamptz</TD></TR>
+    </TABLE>>];
+
+  facilities [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5">
+      <TR><TD BGCOLOR="#0b57c4" COLSPAN="2"><FONT COLOR="white"><B>facilities</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT">PK</TD><TD ALIGN="LEFT">id : uuid</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">name : text</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">category : badminton | futsal | basket | tenis | voli | atletik</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">location, description : text</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">price_per_hour : integer</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">rating : numeric(2,1)</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">is_indoor, is_popular : boolean</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">image_url : text</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">open_hour, close_hour : integer</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">amenities, rules : text[]</TD></TR>
+    </TABLE>>];
+
+  bookings [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5">
+      <TR><TD BGCOLOR="#16803c" COLSPAN="2"><FONT COLOR="white"><B>bookings</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT">PK</TD><TD ALIGN="LEFT">id : uuid</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">booking_code : text (unique)</TD></TR>
+      <TR><TD ALIGN="LEFT">FK</TD><TD ALIGN="LEFT">user_id : uuid</TD></TR>
+      <TR><TD ALIGN="LEFT">FK</TD><TD ALIGN="LEFT">facility_id : uuid</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">booking_date : date</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">start_hour, end_hour : integer</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">rental_fee, service_fee, total : integer</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">status : pending | paid | completed | expired | cancelled</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">created_at : timestamptz</TD></TR>
+      <TR><TD BGCOLOR="#fef3c7" COLSPAN="2" ALIGN="LEFT"><I>EXCLUDE: tidak boleh ada pesanan aktif<BR ALIGN="LEFT"/>dengan rentang jam beririsan (lapangan + tanggal sama)<BR ALIGN="LEFT"/></I></TD></TR>
+    </TABLE>>];
+
+  slots [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5">
+      <TR><TD BGCOLOR="#16803c" COLSPAN="2"><FONT COLOR="white"><B>booked_slots</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT">PK</TD><TD ALIGN="LEFT">id : bigint</TD></TR>
+      <TR><TD ALIGN="LEFT">FK</TD><TD ALIGN="LEFT">facility_id : uuid</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">slot_date : date</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">start_hour : integer</TD></TR>
+      <TR><TD ALIGN="LEFT">FK</TD><TD ALIGN="LEFT">booking_id : uuid</TD></TR>
+      <TR><TD BGCOLOR="#fef3c7" COLSPAN="2" ALIGN="LEFT"><I>UNIQUE (facility_id, slot_date, start_hour)<BR ALIGN="LEFT"/>= penjaga double booking<BR ALIGN="LEFT"/></I></TD></TR>
+    </TABLE>>];
+
+  payments [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5">
+      <TR><TD BGCOLOR="#16803c" COLSPAN="2"><FONT COLOR="white"><B>payments</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT">PK</TD><TD ALIGN="LEFT">id : uuid</TD></TR>
+      <TR><TD ALIGN="LEFT">FK, UQ</TD><TD ALIGN="LEFT">booking_id : uuid</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">method : text (QRIS)</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">amount : integer</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">status : pending | paid | failed | expired</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">transaction_id : text</TD></TR>
+      <TR><TD></TD><TD ALIGN="LEFT">expires_at, paid_at : timestamptz</TD></TR>
+    </TABLE>>];
+
+  // Notasi crow's foot: sisi "banyak" = crow, sisi "satu" = tee
+  users      -> profiles   [dir=both, arrowtail=teetee, arrowhead=teetee, label="1 : 1"];
+  profiles   -> bookings   [dir=both, arrowtail=tee, arrowhead=crowodot, label="1 : N  membuat"];
+  facilities -> bookings   [dir=both, arrowtail=tee, arrowhead=crowodot, label="1 : N  dipesan"];
+  facilities -> slots      [dir=both, arrowtail=tee, arrowhead=crowodot, label="1 : N"];
+  bookings   -> slots      [dir=both, arrowtail=tee, arrowhead=crow,     label="1 : N  mengunci"];
+  bookings   -> payments   [dir=both, arrowtail=teetee, arrowhead=teetee,   label="1 : 1  ditagih"];
+}
